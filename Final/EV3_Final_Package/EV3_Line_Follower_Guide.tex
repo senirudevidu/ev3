@@ -15,6 +15,19 @@ From PowerShell in this folder run \texttt{scp safe\_main.py guided\_calibration
 On the EV3 run \texttt{brickrun -r -- pybricks-micropython make\_qtable\_ev3.py}. It must report 18 entries. Run \texttt{brickrun -r -- pybricks-micropython guided\_calibration.py}; press Center after positioning over dark background, yellow tape, and tape edge. Retrieve with \texttt{scp robot@<CURRENT\_IP>:/home/robot/line\_training/calibration.json .}. Run \texttt{brickrun -r -- pybricks-micropython check\_motor\_direction.py} with both wheels lifted.
 \section*{Normal run}
 Keep \texttt{TRAINING = False}, place the robot on the tape edge, and run \texttt{brickrun -r -- pybricks-micropython safe\_main.py}. Center starts and stops. The robot beeps on obstacles, reverses, turns without RL, searches for yellow tape or its edge, and resumes line following.
+\section*{Motor input/output error}
+If the motor check reports \texttt{OSError: [Errno 5] EIO} on line 9, one motor on A or D is not responding. Over SSH run:
+\begin{verbatim}
+for d in /sys/class/tacho-motor/*; do
+  echo "$d"; cat "$d/address"; cat "$d/driver_name"
+done
+\end{verbatim}
+Both \texttt{ev3-ports:outA} and \texttt{ev3-ports:outD} must report \texttt{lego-ev3-l-motor}. If one is missing, switch off the EV3, reconnect both cables, ensure they are in A and D, reboot, and repeat. Test each port independently:
+\begin{verbatim}
+brickrun -r -- pybricks-micropython -c "from pybricks.ev3devices import Motor; from pybricks.parameters import Port; Motor(Port.A); print('A OK')"
+brickrun -r -- pybricks-micropython -c "from pybricks.ev3devices import Motor; from pybricks.parameters import Port; Motor(Port.D); print('D OK')"
+\end{verbatim}
+Do not run the line follower until both ports initialize successfully.
 \section*{Training}
 Back up with \texttt{cp q\_table.pkl q\_table\_seed\_backup.pkl}. Change \texttt{TRAINING = True}, run the same command, and use Center to start/stop. The result is q\_table\_candidate.pkl. Keep the seed until repeated tests improve. To test a candidate, copy it to q\_table.pkl and set training false.
 \section*{Retrieve and finish}
