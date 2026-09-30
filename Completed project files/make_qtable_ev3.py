@@ -1,7 +1,5 @@
 #!/usr/bin/env pybricks-micropython
-"""Convert the trusted plain-text simulator table to EV3 MicroPython pickle.
-Run on the brick from the folder containing q_table_simulated.txt and main.py.
-"""
+
 import pickle
 
 SOURCE = 'q_table_simulated.txt'
@@ -27,3 +25,4 @@ for key, value in q_table.items():
 with open(OUTPUT, 'wb') as output_file:
     pickle.dump(q_table, output_file)
 print('Saved %d entries to %s' % (len(q_table), OUTPUT))
+

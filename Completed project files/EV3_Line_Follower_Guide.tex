@@ -13,26 +13,27 @@ This work controls a LEGO EV3 robot on yellow tape over a dark surface. A reflec
 \item[\texttt{guided\_calibration.py}] Records 20 reflection samples for dark background, yellow tape, and tape edge; writes \texttt{calibration.json}.
 \item[\texttt{check\_motor\_direction.py}] Pulses A and D with wheels lifted to verify wiring and direction.
 \item[\texttt{make\_qtable\_ev3.py}] Converts the readable 18-entry seed to \texttt{q\_table.pkl}.
-\item[\texttt{q\_table\_simulated.txt}] Human-readable rollback seed.
-\item[\texttt{EV3\_Line\_Follower\_Complete\_Guide.pdf}] Supplied reference; boot files are retained but never flashed.
+\item[\texttt{q\_table\_simulated.txt}] Human-readable seed table.
+\item[\texttt{EV3\_Line\_Follower\_Complete\_Guide.pdf}] Reference guide; boot files are retained but never flashed.
 \end{description}
 \section{Code and training}
-The controller class reads reflection, maps it to WHITE/MIDDLE/BLACK, executes bounded motor commands, and brakes both motors during cleanup. \texttt{best\_action} selects the highest Q value for $(mode,state)$. On an obstacle the robot beeps, reverses, pivots without RL, accepts stable WHITE or MIDDLE as a recovered path, beeps again, and resumes. Training observes a transition, gives +10 for MIDDLE and -10 otherwise, applies $Q\leftarrow Q+\alpha(r+\gamma Q'_{max}-Q)$, and saves \texttt{q\_table\_candidate.pkl}. Always retain the seed for rollback.
+The controller class reads reflection, maps it to WHITE/MIDDLE/BLACK, executes motor commands and stops on Center or an obstacle, and brakes both motors during cleanup. \texttt{best\_action} selects the highest Q value for $(mode,state)$. On an obstacle the robot beeps, reverses, pivots without RL, accepts stable WHITE or MIDDLE as a recovered path, beeps again, and resumes. Training observes a transition, gives +10 for MIDDLE and -10 otherwise, applies $Q\leftarrow Q+\alpha(r+\gamma Q'_{max}-Q)$, and saves \texttt{q\_table\_candidate.pkl}. Keep a copy of the seed table before training.
 \section{Complete commands}
-Use the current Bluetooth address shown by the EV3; replace \texttt{<IP>} below.
+Use the current Bluetooth address shown by the EV3. Open the terminal in the folder containing these files. The commands below use WSL syntax.
 \begin{lstlisting}
-# Computer (PowerShell or WSL)
-cd ".../Assignment 2"
-ping <IP>
-ssh robot@<IP>                    # password: maker
+EV3_IP=169.254.73.240
+# Computer (WSL)
+
+ping $EV3_IP
+ssh robot@$EV3_IP                    # password: maker
 
 # EV3 SSH shell
 mkdir -p /home/robot/assignment2
 exit
 
 # Computer: upload
-scp safe_main.py guided_calibration.py check_motor_direction.py make_qtable_ev3.py q_table_simulated.txt robot@<IP>:/home/robot/assignment2/
-ssh robot@<IP>
+scp safe_main.py guided_calibration.py check_motor_direction.py make_qtable_ev3.py q_table_simulated.txt robot@$EV3_IP:/home/robot/assignment2/
+ssh robot@$EV3_IP
 cd /home/robot/assignment2
 
 # EV3: build, calibrate, motor test
@@ -52,9 +53,9 @@ brickrun -r -- pybricks-micropython safe_main.py
 
 # Retrieve after exit
 exit
-scp robot@<IP>:/home/robot/assignment2/calibration.json .
-scp robot@<IP>:/home/robot/assignment2/q_table_candidate.pkl .
-scp robot@<IP>:/home/robot/assignment2/*.log .
+scp robot@$EV3_IP:/home/robot/assignment2/calibration.json .
+scp robot@$EV3_IP:/home/robot/assignment2/q_table_candidate.pkl .
+scp robot@$EV3_IP:/home/robot/assignment2/*.log .
 \end{lstlisting}
 \section{Motor EIO error}
 For \texttt{OSError: [Errno 5] EIO} on line 9, inspect ports:
@@ -67,3 +68,11 @@ brickrun -r -- pybricks-micropython -c "from pybricks.ev3devices import Motor; f
 brickrun -r -- pybricks-micropython -c "from pybricks.ev3devices import Motor; from pybricks.parameters import Port; Motor(Port.D); print('D OK')"
 \end{lstlisting}
 \end{document}
+
+
+
+
+
+
+
+

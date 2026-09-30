@@ -1,5 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-"""Bounded baseline and warm-start training. See SESSION_NOTES.md."""
 import os
 import pickle
 import random
@@ -9,16 +8,13 @@ from pybricks.parameters import Button, Port
 from pybricks.robotics import DriveBase
 from pybricks.tools import StopWatch, wait
 
-# Sensor calibration and motor direction verified on the live brick.
-# Wheel geometry remains nominal; validate before increasing speed or duration.
 HARDWARE_CALIBRATED = True
 TRAINING = False
-# Measured dark=3..4, edge=22..23, yellow=34..35; target the tape edge.
 WHITE_VALUE, BLACK_VALUE = 28, 13
-WHEEL_DIAMETER, AXLE_TRACK = 40, 50  # Still awaiting physical measurements.
+WHEEL_DIAMETER, AXLE_TRACK = 40, 50
 ALPHA, GAMMA, EXPLORATION = 0.1, 0.9, 0.10
 SESSION_MS, MAX_TRAINING_STEPS = 86400000, 1000000
-TURN_TIMEOUT_MS = None  # Turns continue until the sensor state changes or Center is pressed.
+TURN_TIMEOUT_MS = None
 FORWARD_SPEED, TURN_RATE = 30, 55
 INPUT_TABLE = 'q_table.pkl'
 TRAINED_TABLE = 'q_table_candidate.pkl'
@@ -102,12 +98,11 @@ class Controller:
             raise SessionStopped('Center button pressed')
         if self.clock is not None and self.clock.time() >= SESSION_MS:
             raise SessionStopped('Session time limit reached')
-        # Pybricks IR distance is relative 0..100, not centimetres.
         if self.ir.distance() < 15:
             raise ObstacleDetected('Obstacle detected')
 
     def avoid_obstacle(self, mode):
-        """Deterministic obstacle bypass; resume when tape/edge is reacquired."""
+        
         direction = -TURN_RATE if mode else TURN_RATE
         try:
             self.robot.drive(-20, 0)
@@ -117,9 +112,6 @@ class Controller:
                 if Button.CENTER in self.ev3.buttons.pressed():
                     raise SessionStopped('Center button pressed')
                 current = self.state()
-                # Yellow tape (WHITE) and its edge (MIDDLE) are both valid
-                # path readings; BLACK is the background. Require two stable
-                # readings after the obstacle clears to avoid false recovery.
                 if self.ir.distance() >= 15 and current in ('WHITE', 'MIDDLE'):
                     stable += 1
                     if stable >= 2:
@@ -227,3 +219,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
