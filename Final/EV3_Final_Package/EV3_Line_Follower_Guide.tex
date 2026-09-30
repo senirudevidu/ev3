@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\title{EV3 Line Follower Manual}
+\date{30 September 2026}
+\begin{document}
+\maketitle
+\section*{Package}
+Use safe\_main.py, guided\_calibration.py, check\_motor\_direction.py, make\_qtable\_ev3.py, and q\_table\_simulated.txt. Wiring is motors A/D, color sensor S1, infrared sensor S4.
+\section*{Connect}
+Pair Bluetooth, enable the EV3 Network Connection, and find its current IP. Run \texttt{ping <CURRENT\_IP>} and \texttt{ssh robot@<CURRENT\_IP>} (default password \texttt{maker}). Then run \texttt{mkdir -p /home/robot/line\_training} and \texttt{cd /home/robot/line\_training}. The hostname \texttt{ev3dev.local} may work.
+\section*{Upload}
+From PowerShell in this folder run \texttt{scp safe\_main.py guided\_calibration.py check\_motor\_direction.py make\_qtable\_ev3.py q\_table\_simulated.txt robot@<CURRENT\_IP>:/home/robot/line\_training/}.
+\section*{Build and calibrate}
+On the EV3 run \texttt{brickrun -r -- pybricks-micropython make\_qtable\_ev3.py}. It must report 18 entries. Run \texttt{brickrun -r -- pybricks-micropython guided\_calibration.py}; press Center after positioning over dark background, yellow tape, and tape edge. Retrieve with \texttt{scp robot@<CURRENT\_IP>:/home/robot/line\_training/calibration.json .}. Run \texttt{brickrun -r -- pybricks-micropython check\_motor\_direction.py} with both wheels lifted.
+\section*{Normal run}
+Keep \texttt{TRAINING = False}, place the robot on the tape edge, and run \texttt{brickrun -r -- pybricks-micropython safe\_main.py}. Center starts and stops. The robot beeps on obstacles, reverses, turns without RL, searches for yellow tape or its edge, and resumes line following.
+\section*{Training}
+Back up with \texttt{cp q\_table.pkl q\_table\_seed\_backup.pkl}. Change \texttt{TRAINING = True}, run the same command, and use Center to start/stop. The result is q\_table\_candidate.pkl. Keep the seed until repeated tests improve. To test a candidate, copy it to q\_table.pkl and set training false.
+\section*{Retrieve and finish}
+Use \texttt{scp robot@<CURRENT\_IP>:/home/robot/line\_training/*.log .} and \texttt{scp robot@<CURRENT\_IP>:/home/robot/line\_training/q\_table\_candidate.pkl .}. Never flash u-boot.bin or boot.scr. The controller follows local line geometry; branch selection needs an explicit junction policy or extra sensing.
+\end{document}
